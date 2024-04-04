@@ -418,6 +418,21 @@ class Pattern:
         else:
             raise ValueError("Invalid method")
 
+
+    def modify_auxiliary_states(self, new_states:dict) :
+        """
+        new_states : dict {aux_index : desired state} (instead of the default |+> )
+        """
+        i = 0
+        while i < len(self.__seq) :
+            cmd = self.__seq[i]
+            if cmd[0] == 'N' :
+                aux_index = cmd[1]
+                plane, angle = new_states[aux_index][0], new_states[aux_index][1]
+                new_cmd = ['N', aux_index, plane, angle]
+                self.__seq[i] = new_cmd
+            i += 1
+
     def _find_op_to_be_moved(self, op, rev=False, skipnum=0):
         """Internal method for pattern modification.
 
