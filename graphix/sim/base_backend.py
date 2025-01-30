@@ -142,6 +142,9 @@ class Backend:
             self.__node_index = node_index.copy()
         if not isinstance(pr_calc, bool):
             raise TypeError("`pr_calc` should be bool")
+        
+        self.preparation_bank = dict()
+
         # whether to compute the probability
         self.__pr_calc = pr_calc
         self.__rng = ensure_rng(rng)
@@ -167,13 +170,23 @@ class Backend:
 
     def add_nodes(self, nodes, data=BasicStates.PLUS) -> None:
         """Add new qubit(s) to statevector in argument and assign the corresponding node number to list self.node_index.
+            If the backend is instructed to create a specific state (contained in the `preparation), gets it from the bank
 
         Parameters
         ----------
         nodes : list of node indices
         """
-        self.state.add_nodes(nqubit=len(nodes), data=data)
-        self.node_index.extend(nodes)
+        # TODO: this would require a `baseN` kind of thing to be cleaner
+        if len(self.preparation_bank) != 0:
+            assert set(nodes) <= set(self.preparation_bank.keys())
+            for node in nodes:
+                if node in self.preparation_bank:
+                    self.state.add_nodes(nqubit=1, data=self.preparation_bank[node])
+                    self.node_index.extend([node])
+        else:
+            # usual method
+            self.state.add_nodes(nqubit=len(nodes), data=data)
+            self.node_index.extend(nodes)
 
     def entangle_nodes(self, edge: tuple[int, int]) -> None:
         """Apply CZ gate to two connected nodes.
